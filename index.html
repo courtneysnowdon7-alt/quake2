@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Earthquake Incoming</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: linear-gradient(to bottom, #1d1530 0%, #5a2a3a 55%, #c25a3a 100%);
+    font-family: "Comic Sans MS", "Comic Sans", cursive; color: #fff3d6;
+  }
+  #stage { position: absolute; inset: 0; }
+  #world { position: absolute; inset: 0; }
+  .shaking #world { animation: quake 0.35s infinite; }
+  .shaking.heavy #world { animation: quakeHeavy 0.2s infinite; }
+  @keyframes quake {
+    0%,100% { transform: translate(0,0) rotate(0); }
+    20% { transform: translate(-3px, 2px) rotate(-0.3deg); }
+    40% { transform: translate(3px, -2px) rotate(0.3deg); }
+    60% { transform: translate(-2px, -3px) rotate(0.2deg); }
+    80% { transform: translate(2px, 3px) rotate(-0.2deg); }
+  }
+  @keyframes quakeHeavy {
+    0%,100% { transform: translate(0,0) rotate(0); }
+    25% { transform: translate(-8px, 5px) rotate(-1deg); }
+    50% { transform: translate(7px, -6px) rotate(0.8deg); }
+    75% { transform: translate(-5px, -4px) rotate(-0.6deg); }
+  }
+  /* Mountains */
+  #mountains {
+    position: absolute; left: 0; bottom: 0;
+    width: 100%; height: 60%;
+    pointer-events: none;
+  }
+  #mountains svg { width: 100%; height: 100%; display: block; }
+  /* Centre content */
+  #center {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center; width: 90%;
+  }
+  #title {
+    position: relative; font-size: clamp(30px, 6vw, 60px);
+    font-weight: 800; margin: 0;
+    text-shadow: 0 0 20px rgba(255,120,40,0.6);
+  }
+  #title::before, #title::after {
+    content: attr(data-text); position: absolute; left: 0; top: 0;
+    width: 100%; opacity: 0.8;
+  }
+  #title::before { color: #ff3b2f; animation: glitch1 2.5s infinite; clip-path: inset(0 0 60% 0); }
+  #title::after  { color: #3bd1ff; animation: glitch2 2.5s infinite; clip-path: inset(50% 0 0 0); }
+  @keyframes glitch1 {
+    0%,90%,100% { transform: translate(0); }
+    92% { transform: translate(-6px, 2px); }
+    94% { transform: translate(5px, -2px); }
+    96% { transform: translate(-2px, 0); }
+  }
+  @keyframes glitch2 {
+    0%,90%,100% { transform: translate(0); }
+    91% { transform: translate(6px, -1px); }
+    93% { transform: translate(-5px, 2px); }
+    95% { transform: translate(3px, 0); }
+  }
+  #subtitle { margin-top: 10px; font-size: 16px; opacity: 0.8; }
+  #btn {
+    margin-top: 24px; padding: 14px 30px; font-size: 18px;
+    font-family: inherit;
+    background: rgba(0,0,0,0.3); color: #fff3d6; cursor: pointer;
+    border: 2px solid #fff3d6; border-radius: 12px;
+    transition: background 0.2s, transform 0.1s;
+  }
+  #btn:hover { background: rgba(255,243,214,0.2); }
+  #btn:active { transform: scale(0.96); }
+  /* Flashing alerts in every corner */
+  .alert {
+    position: absolute; padding: 6px 12px; font-size: 13px;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: #ff4d3d; font-weight: bold;
+    animation: flash 0.8s steps(2, start) infinite;
+  }
+  .alert.tl { top: 12px; left: 12px; }
+  .alert.tr { top: 12px; right: 12px; }
+  .alert.bl { bottom: 12px; left: 12px; }
+  .alert.br { bottom: 12px; right: 12px; }
+  @keyframes flash { to { visibility: hidden; } }
+  /* Seismic ripples */
+  .ripple {
+    position: absolute; border: 2px solid rgba(255,200,120,0.7);
+    border-radius: 50%; pointer-events: none;
+    transform: translate(-50%, -50%) scale(0);
+    animation: ripple 2.4s ease-out forwards;
+  }
+  @keyframes ripple {
+    to { transform: translate(-50%, -50%) scale(12); opacity: 0; }
+  }
+  /* Falling dust */
+  .dust {
+    position: absolute; top: -10px; width: 3px; height: 3px;
+    background: #d9b48a; border-radius: 50%; opacity: 0.7;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) translateX(var(--drift)); opacity: 0; }
+  }
+  /* Full-screen flash */
+  #flash {
+    position: absolute; inset: 0; background: #fff;
+    opacity: 0; pointer-events: none;
+  }
+  #flash.go { animation: flashBang 0.4s ease-out; }
+  @keyframes flashBang {
+    0% { opacity: 0.5; } 100% { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="world">
+    <div id="mountains">
+      <svg viewBox="0 0 1200 400" preserveAspectRatio="none">
+        <polygon fill="#4a2f4f" points="0,260 120,140 230,220 360,100 480,210 600,80 730,200 860,110 990,230 1080,150 1200,240 1200,400 0,400"/>
+        <polygon fill="#3a2440" points="0,300 150,200 280,280 420,170 560,270 700,190 850,290 980,210 1110,300 1200,250 1200,400 0,400"/>
+        <polygon fill="#2a1a2e" points="0,340 200,270 340,330 500,260 660,335 820,275 980,340 1120,290 1200,320 1200,400 0,400"/>
+        <polygon fill="#140c18" points="0,370 260,330 420,365 620,325 800,368 1000,335 1200,362 1200,400 0,400"/>
+      </svg>
+    </div>
+    <div id="center">
+      <h1 id="title" data-text="EARTHQUAKE">EARTHQUAKE</h1>
+      <div id="subtitle">Click to trigger the tremor</div>
+      <button id="btn">Shake it</button>
+    </div>
+  </div>
+  <div class="alert tl">⚠ Seismic Alert</div>
+  <div class="alert tr">⚠ Seismic Alert</div>
+  <div class="alert bl">⚠ Seismic Alert</div>
+  <div class="alert br">⚠ Seismic Alert</div>
+  <div id="flash"></div>
+</div>
+<script>
+  const stage = document.getElementById('stage');
+  const flash = document.getElementById('flash');
+  const btn = document.getElementById('btn');
+  function rand(min, max) { return Math.random() * (max - min) + min; }
+  function addRipple(x, y) {
+    const r = document.createElement('div');
+    r.className = 'ripple';
+    r.style.left = x + 'px';
+    r.style.top = y + 'px';
+    r.style.width = r.style.height = '60px';
+    stage.appendChild(r);
+    setTimeout(() => r.remove(), 2500);
+  }
+  function addDust(count) {
+    for (let i = 0; i < count; i++) {
+      const d = document.createElement('div');
+      d.className = 'dust';
+      d.style.left = rand(0, 100) + 'vw';
+      d.style.setProperty('--drift', rand(-80, 80) + 'px');
+      d.style.animationDuration = rand(2, 4.5) + 's';
+      d.style.width = d.style.height = rand(2, 5) + 'px';
+      stage.appendChild(d);
+      setTimeout(() => d.remove(), 4500);
+    }
+  }
+  let quakeTimer = null;
+  function startQuake() {
+    stage.classList.add('shaking');
+    flash.classList.remove('go');
+    void flash.offsetWidth;
+    flash.classList.add('go');
+    setTimeout(() => stage.classList.add('heavy'), 600);
+    setTimeout(() => stage.classList.remove('heavy'), 2600);
+    let ticks = 0;
+    clearInterval(quakeTimer);
+    quakeTimer = setInterval(() => {
+      addRipple(rand(0, window.innerWidth), rand(0, window.innerHeight));
+      if (++ticks > 12) clearInterval(quakeTimer);
+    }, 250);
+    addDust(40);
+    setTimeout(() => addDust(30), 1200);
+    setTimeout(() => stage.classList.remove('shaking'), 4000);
+  }
+  btn.addEventListener('click', startQuake);
+  stage.addEventListener('click', e => {
+    if (e.target !== btn) addRipple(e.clientX, e.clientY);
+  });
+  setInterval(() => addDust(3), 1500);
+</script>
+</body>
+</html>
